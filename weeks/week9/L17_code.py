@@ -31,21 +31,42 @@ def plotData(fileName):
 
 ##plotData('springData.txt')
 ##pylab.show()
+from multiprocessing import Process, Queue
 
-def testErrors(ntrials=10000,npts=100,rtype=0):
-    rd={0:random.uniform,1:random.triangular}
-    rt={0:'Uniform',1:'Triangular'}
+def testerr (ntrials,npts,rtype,q,rd):
+    print('working')
     results = [0] * ntrials
-    for i in xrange(ntrials):
+    for i in range(ntrials):
         s = 0   # sum of random points
-        for j in xrange(npts):
+        for j in range(npts):
             s += rd[rtype](-1,1)
         results[i] =s
+    q.put(results)
+
+
+def testErrors(ntrials=800000,npts=100,rtype=0,process_num=8):
+    rd={0:random.uniform,1:random.triangular}
+    rt={0:'Uniform',1:'Triangular'}
+
+    q = Queue()
+    k=process_num
+    ntrials2=ntrials/k
+    pl=[0]*k
+    for i in range(k):
+        pl[i] = Process(target=testerr, args=(ntrials2,npts,rtype,q,rd))
+        pl[i].start()
+    results=[]
+    for i in range(k):
+        results+=q.get()    # prints "[42, None, 'hello']"
+    for i in range(k):
+        pl[i].join()
     # plot results in a histogram
+    print(len(results))
     pylab.hist(results,bins=50)
     pylab.title('Sum of 100 random points -- {0:s} PDF ({1:,d} trials)'.format(rt[rtype],ntrials))
     pylab.xlabel('Sum')
     pylab.ylabel('Number of trials')
+    pylab.show()
 
 ##pylab.figure(0)
 ##testErrors(ntrials=100000,rtype=0)
@@ -182,31 +203,31 @@ def rSquare(measured, estimated):
     mMean = measured.sum()/float(len(measured))
     MV = ((mMean - measured)**2).sum()
     return 1 - SEE/MV
-
-def tryFits1(fName):
-    distances, heights = getTrajectoryData(fName)
-    distances = pylab.array(distances)*36
-    totHeights = pylab.array([0]*len(distances))
-    for h in heights:
-        totHeights = totHeights + pylab.array(h)
-    pylab.title('Trajectory of Projectile (Mean of 4 Trials)')
-    pylab.xlabel('Inches from Launch Point')
-    pylab.ylabel('Inches Above Launch Point')
-    meanHeights = totHeights/float(len(heights))
-    pylab.plot(distances, meanHeights, 'bo')
-    a,b = pylab.polyfit(distances, meanHeights, 1)
-    altitudes = a*distances + b
-    pylab.plot(distances, altitudes, 'r',
-               label = 'Linear Fit' + ', R2 = '
-               + str(round(rSquare(meanHeights, altitudes), 4)))
-    a,b,c = pylab.polyfit(distances, meanHeights, 2)
-    altitudes = a*(distances**2) + b*distances + c
-    pylab.plot(distances, altitudes, 'g',
-               label = 'Quadratic Fit' + ', R2 = '
-               + str(round(rSquare(meanHeights, altitudes), 4)))
-    pylab.legend()
-
-tryFits1('launcherData.txt')
-pylab.show()
+##
+##def tryFits1(fName):
+##    distances, heights = getTrajectoryData(fName)
+##    distances = pylab.array(distances)*36
+##    totHeights = pylab.array([0]*len(distances))
+##    for h in heights:
+##        totHeights = totHeights + pylab.array(h)
+##    pylab.title('Trajectory of Projectile (Mean of 4 Trials)')
+##    pylab.xlabel('Inches from Launch Point')
+##    pylab.ylabel('Inches Above Launch Point')
+##    meanHeights = totHeights/float(len(heights))
+##    pylab.plot(distances, meanHeights, 'bo')
+##    a,b = pylab.polyfit(distances, meanHeights, 1)
+##    altitudes = a*distances + b
+##    pylab.plot(distances, altitudes, 'r',
+##               label = 'Linear Fit' + ', R2 = '
+##               + str(round(rSquare(meanHeights, altitudes), 4)))
+##    a,b,c = pylab.polyfit(distances, meanHeights, 2)
+##    altitudes = a*(distances**2) + b*distances + c
+##    pylab.plot(distances, altitudes, 'g',
+##               label = 'Quadratic Fit' + ', R2 = '
+##               + str(round(rSquare(meanHeights, altitudes), 4)))
+##    pylab.legend()
+##
+##tryFits1('launcherData.txt')
+##pylab.show()
 
 
