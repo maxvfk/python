@@ -1,0 +1,229 @@
+class Member(object):
+    def __init__(self, founder):
+        """
+        founder: string
+        Initializes a member.
+        Name is the string of name of this node,
+        parent is None, and no children
+        """
+        self.name = founder
+        self.parent = None
+        self.children = []
+
+    def __str__(self):
+        return self.name
+
+    def add_parent(self, mother):
+        """
+        mother: Member
+        Sets the parent of this node to the `mother` Member node
+        """
+        self.parent = mother
+
+    def get_parent(self):
+        """
+        Returns the parent Member node of this Member
+        """
+        return self.parent
+
+    def is_parent(self, mother):
+        """
+        mother: Member
+        Returns: Boolean, whether or not `mother` is the
+        parent of this Member
+        """
+        return self.parent == mother
+
+    def add_child(self, child):
+        """
+        child: Member
+        Adds another child Member node to this Member
+        """
+        self.children.append(child)
+
+    def is_child(self, child):
+        """
+        child: Member
+        Returns: Boolean, whether or not `child` is a
+        child of this Member
+        """
+        return child in self.children
+
+
+class Family(object):
+    def __init__(self, founder):
+        """
+        Initialize with string of name of oldest ancestor
+
+        Keyword arguments:
+        founder -- string of name of oldest ancestor
+        """
+
+        self.names_to_nodes = {}
+        self.root = Member(founder)
+        self.names_to_nodes[founder] = self.root
+
+    def set_children(self, mother, list_of_children):
+        """
+        Set all children of the mother.
+
+        Keyword arguments:
+        mother -- mother's name as a string
+        list_of_children -- children names as strings
+        """
+        # convert name to Member node (should check for validity)
+        mom_node = self.names_to_nodes[mother]
+        # add each child
+        for c in list_of_children:
+            # create Member node for a child
+            c_member = Member(c)
+            # remember its name to node mapping
+            self.names_to_nodes[c] = c_member
+            # set child's parent
+            c_member.add_parent(mom_node)
+            # set the parent's child
+            mom_node.add_child(c_member)
+
+    def is_parent(self, mother, kid):
+        """
+        Returns True or False whether mother is parent of kid.
+
+        Keyword arguments:
+        mother -- string of mother's name
+        kid -- string of kid's name
+        """
+        mom_node = self.names_to_nodes[mother]
+        child_node = self.names_to_nodes[kid]
+        return child_node.is_parent(mom_node)
+
+    def is_child(self, kid, mother):
+        """
+        Returns True or False whether kid is child of mother.
+
+        Keyword arguments:
+        kid -- string of kid's name
+        mother -- string of mother's name
+        """
+        mom_node = self.names_to_nodes[mother]
+        child_node = self.names_to_nodes[kid]
+        return mom_node.is_child(child_node)
+    def desc(self, a, start):
+        s=self.names_to_nodes[start]
+        def desc2(self, a, s):
+            if s.__str__()==a:
+                return 1
+            if s.children==[]:
+                return None
+            for c in s.children:
+                aaa=desc2(self,a, c)
+                if aaa!=None:
+                        return aaa+1
+        return desc2(self, a, s)
+
+
+
+    def cousin2(self, a, b):
+        """
+        Returns a tuple of (the cousin type, degree removed)
+
+        cousin type is an integer that is -1 if a and b
+        are the same node or if one is the direct descendent
+        of the other.  Otherwise, cousin type is 0 or greater,
+        representing the shorter distance to their common
+        ancestor as described in 5-2.
+
+        degree removed is the distance to the common ancestor
+
+        Keyword arguments:
+        a -- string that is the name of a
+        b -- string that is the name of b
+        """
+
+        ## YOUR CODE HERE ####
+        if a==b: return -1,0
+        r=self.root.__str__()
+        a1=self.desc(a,r)
+        b1=self.desc(b,r)
+        if self.desc(a,b)==self.desc(b,a)==None:
+            return (min([a1,b1])-2-abs(a1-b1)),abs(a1-b1)
+        else:
+            return -1,abs(a1-b1)
+
+    def cousin(self, a, b):
+
+        if a==b:
+            #print (-1,0)
+            return (-1,0)
+        if self.names_to_nodes[a].get_parent()==self.names_to_nodes[b] or self.names_to_nodes[b]==self.names_to_nodes[a].get_parent():
+            #print (-1,1)
+            return (-1,1)
+        ax_node=self.names_to_nodes[a]
+        bx_node=self.names_to_nodes[b]
+        a_list=[]
+        b_list=[]
+
+        a_list.append(a)
+        while not ax_node == self.root:
+            ax_node=ax_node.get_parent()
+            a_list.append(ax_node.name)
+
+        b_list.append(b)
+        while not bx_node == self.root:
+            bx_node=bx_node.get_parent()
+            b_list.append(bx_node.name)
+
+        removed=abs(len(a_list)-len(b_list))
+        if a in b_list or b in a_list:
+            return (-1,removed)
+
+        cousin=min([len(a_list), len(b_list)])
+        i=1
+        while a_list[-i]==b_list[-i] and i<cousin:
+            i+=1
+        cousin-=i
+        #print (cousin,removed)
+        return (cousin,removed)
+
+f = Family("a")
+f.set_children("a", ["b", "c"])
+f.set_children("b", ["d", "e"])
+f.set_children("c", ["f", "g"])
+
+f.set_children("d", ["h", "i"])
+f.set_children("e", ["j", "k"])
+f.set_children("f", ["l", "m"])
+f.set_children("g", ["n", "o", "p", "q"])
+
+words = ["zeroth", "first", "second", "third", "fourth", "fifth", "non"]
+
+print f.desc('d','a')
+## These are your test cases.
+
+## The first test case should print out:
+## 'b' is a zeroth cousin 0 removed from 'c'
+t, r = f.cousin("b", "c")
+print "'b' is a", words[t],"cousin", r, "removed from 'c'"
+
+## For the remaining test cases, use the graph to figure out what should
+## be printed, and make sure that your code prints out the appropriate values.
+
+t, r = f.cousin("n", "o")
+print "'n' is a", words[t],"cousin", r, "removed from 'o'"
+
+t, r = f.cousin("i", "n")
+print "'i' is a", words[t],"cousin", r, "removed from 'n'"
+
+t, r = f.cousin("q", "e")
+print "'q' is a", words[t], "cousin", r, "removed from 'e'"
+
+t, r = f.cousin("h", "c")
+print "'h' is a", words[t], "cousin", r, "removed from 'c'"
+
+t, r = f.cousin("h", "a")
+print "'h' is a", words[t], "cousin", r, "removed from 'a'"
+
+t, r = f.cousin("h", "h")
+print "'h' is a", words[t], "cousin", r, "removed from 'h'"
+
+t, r = f.cousin("a", "a")
+print "'a' is a", words[t], "cousin", r, "removed from 'a'"

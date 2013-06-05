@@ -1,5 +1,6 @@
 from graph import *
 
+
 def BFS(graph, start, end, q = []):
     initPath = [start]
     q.append(initPath)
